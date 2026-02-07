@@ -20,11 +20,13 @@ defmodule ClawbreakerTest do
     end
 
     test "uses custom URL when specified" do
-      {:ok, config} = Clawbreaker.connect(
-        api_key: "test_key",
-        url: "https://custom.example.com",
-        persist: false
-      )
+      {:ok, config} =
+        Clawbreaker.connect(
+          api_key: "test_key",
+          url: "https://custom.example.com",
+          persist: false
+        )
+
       assert config.url == "https://custom.example.com"
     end
   end
@@ -58,11 +60,12 @@ defmodule Clawbreaker.AgentTest do
 
   describe "new/1" do
     test "creates local agent struct with required fields" do
-      agent = Agent.new(
-        name: "Test Bot",
-        model: "claude-sonnet-4",
-        system_prompt: "You are helpful."
-      )
+      agent =
+        Agent.new(
+          name: "Test Bot",
+          model: "claude-sonnet-4",
+          system_prompt: "You are helpful."
+        )
 
       assert %Agent{} = agent
       assert agent.name == "Test Bot"
@@ -72,43 +75,47 @@ defmodule Clawbreaker.AgentTest do
     end
 
     test "uses default temperature of 0.7" do
-      agent = Agent.new(
-        name: "Test",
-        model: "claude-sonnet-4",
-        system_prompt: "Test"
-      )
+      agent =
+        Agent.new(
+          name: "Test",
+          model: "claude-sonnet-4",
+          system_prompt: "Test"
+        )
 
       assert agent.temperature == 0.7
     end
 
     test "allows custom temperature" do
-      agent = Agent.new(
-        name: "Test",
-        model: "claude-sonnet-4",
-        system_prompt: "Test",
-        temperature: 0.5
-      )
+      agent =
+        Agent.new(
+          name: "Test",
+          model: "claude-sonnet-4",
+          system_prompt: "Test",
+          temperature: 0.5
+        )
 
       assert agent.temperature == 0.5
     end
 
     test "uses empty tools list by default" do
-      agent = Agent.new(
-        name: "Test",
-        model: "claude-sonnet-4",
-        system_prompt: "Test"
-      )
+      agent =
+        Agent.new(
+          name: "Test",
+          model: "claude-sonnet-4",
+          system_prompt: "Test"
+        )
 
       assert agent.tools == []
     end
 
     test "allows specifying tools" do
-      agent = Agent.new(
-        name: "Test",
-        model: "claude-sonnet-4",
-        system_prompt: "Test",
-        tools: [:search, :calculator]
-      )
+      agent =
+        Agent.new(
+          name: "Test",
+          model: "claude-sonnet-4",
+          system_prompt: "Test",
+          tools: [:search, :calculator]
+        )
 
       assert agent.tools == [:search, :calculator]
     end
@@ -181,29 +188,32 @@ defmodule Clawbreaker.ErrorsTest do
     end
 
     test "extracts message from error body" do
-      error = Clawbreaker.APIError.exception(%{
-        status: 400,
-        body: %{"error" => %{"message" => "Invalid request"}}
-      })
+      error =
+        Clawbreaker.APIError.exception(%{
+          status: 400,
+          body: %{"error" => %{"message" => "Invalid request"}}
+        })
 
       assert error.status == 400
       assert error.message == "Invalid request"
     end
 
     test "extracts simple error string from body" do
-      error = Clawbreaker.APIError.exception(%{
-        status: 400,
-        body: %{"error" => "Something went wrong"}
-      })
+      error =
+        Clawbreaker.APIError.exception(%{
+          status: 400,
+          body: %{"error" => "Something went wrong"}
+        })
 
       assert error.message == "Something went wrong"
     end
 
     test "falls back to status message when no error in body" do
-      error = Clawbreaker.APIError.exception(%{
-        status: 500,
-        body: %{"unexpected" => "format"}
-      })
+      error =
+        Clawbreaker.APIError.exception(%{
+          status: 500,
+          body: %{"unexpected" => "format"}
+        })
 
       assert error.message == "API request failed with status 500"
     end
@@ -228,7 +238,8 @@ defmodule Clawbreaker.ConfigTest do
 
   describe "configure/1" do
     test "stores configuration" do
-      {:ok, config} = Config.configure(url: "https://test.com", api_key: "key123", persist: false)
+      {:ok, config} =
+        Config.configure(url: "https://test.com", api_key: "key123", persist: false)
 
       assert config.url == "https://test.com"
       assert config.api_key == "key123"

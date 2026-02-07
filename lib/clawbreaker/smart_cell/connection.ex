@@ -70,47 +70,47 @@ if Code.ensure_loaded?(Kino.SmartCell) do
       """
       export function init(ctx, payload) {
         ctx.importCSS("main.css");
-        
+
         ctx.root.innerHTML = `
           <div class="clawbreaker-connection">
             <div class="header">
               <span class="icon">🔌</span>
               <span class="title">Connect to Clawbreaker</span>
             </div>
-            
+
             <div class="field">
               <label>Instance URL</label>
-              <input type="url" name="url" value="${payload.url}" 
+              <input type="url" name="url" value="${payload.url}"
                      placeholder="https://api.clawbreaker.dev" />
             </div>
-            
+
             <div class="field checkbox">
               <label>
-                <input type="checkbox" name="use_api_key" 
+                <input type="checkbox" name="use_api_key"
                        ${payload.use_api_key ? 'checked' : ''} />
                 Use API Key (from Livebook secrets)
               </label>
             </div>
-            
+
             <div class="hint">
-              ${payload.use_api_key 
-                ? 'Add CLAWBREAKER_API_KEY to your Livebook secrets' 
+              ${payload.use_api_key
+                ? 'Add CLAWBREAKER_API_KEY to your Livebook secrets'
                 : 'Will open browser for OAuth authentication'}
             </div>
           </div>
         `;
-        
+
         const urlInput = ctx.root.querySelector('input[name="url"]');
         const apiKeyCheckbox = ctx.root.querySelector('input[name="use_api_key"]');
-        
+
         urlInput.addEventListener("change", () => {
           ctx.pushEvent("update", { url: urlInput.value });
         });
-        
+
         apiKeyCheckbox.addEventListener("change", () => {
           ctx.pushEvent("update", { use_api_key: apiKeyCheckbox.checked });
         });
-        
+
         ctx.handleEvent("update", (payload) => {
           urlInput.value = payload.url;
           apiKeyCheckbox.checked = payload.use_api_key;
@@ -127,7 +127,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         background: #f8f9fa;
         border-radius: 8px;
       }
-      
+
       .header {
         display: flex;
         align-items: center;
@@ -135,14 +135,14 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         margin-bottom: 16px;
         font-weight: 600;
       }
-      
+
       .icon { font-size: 20px; }
       .title { font-size: 14px; }
-      
+
       .field {
         margin-bottom: 12px;
       }
-      
+
       .field label {
         display: block;
         font-size: 12px;
@@ -150,7 +150,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         margin-bottom: 4px;
         color: #495057;
       }
-      
+
       .field input[type="url"] {
         width: 100%;
         padding: 8px 12px;
@@ -158,14 +158,14 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         border-radius: 4px;
         font-size: 14px;
       }
-      
+
       .field.checkbox label {
         display: flex;
         align-items: center;
         gap: 8px;
         cursor: pointer;
       }
-      
+
       .hint {
         font-size: 12px;
         color: #6c757d;

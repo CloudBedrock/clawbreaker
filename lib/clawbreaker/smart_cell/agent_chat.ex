@@ -45,26 +45,26 @@ if Code.ensure_loaded?(Kino.SmartCell) do
       """
       export function init(ctx, payload) {
         ctx.importCSS("main.css");
-        
+
         ctx.root.innerHTML = `
           <div class="agent-chat-config">
             <div class="header">
               <span class="icon">💬</span>
               <span class="title">Agent Chat</span>
             </div>
-            
+
             <div class="field">
               <label>Agent Variable</label>
-              <input type="text" name="agent_var" value="${payload.agent_var}" 
+              <input type="text" name="agent_var" value="${payload.agent_var}"
                      placeholder="agent" />
             </div>
-            
+
             <div class="hint">
               Run this cell to start an interactive chat with your agent.
             </div>
           </div>
         `;
-        
+
         ctx.root.querySelector('[name="agent_var"]').addEventListener('change', (e) => {
           ctx.pushEvent("update", { agent_var: e.target.value });
         });
@@ -80,7 +80,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         background: #f8f9fa;
         border-radius: 8px;
       }
-      
+
       .header {
         display: flex;
         align-items: center;
@@ -88,14 +88,14 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         margin-bottom: 16px;
         font-weight: 600;
       }
-      
+
       .icon { font-size: 20px; }
       .title { font-size: 14px; }
-      
+
       .field {
         margin-bottom: 12px;
       }
-      
+
       .field label {
         display: block;
         font-size: 12px;
@@ -103,7 +103,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         margin-bottom: 4px;
         color: #495057;
       }
-      
+
       .field input {
         width: 200px;
         padding: 8px 12px;
@@ -112,7 +112,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         font-size: 14px;
         font-family: monospace;
       }
-      
+
       .hint {
         font-size: 12px;
         color: #6c757d;

@@ -322,9 +322,13 @@ defmodule Clawbreaker.Agent do
   def stream_test(%__MODULE__{id: nil} = agent, message, callback) do
     messages = normalize_messages(message)
 
-    Client.stream("/v1/agents/test/stream", %{agent: to_api(agent), messages: messages}, fn event ->
-      callback.(parse_stream_event(event))
-    end)
+    Client.stream(
+      "/v1/agents/test/stream",
+      %{agent: to_api(agent), messages: messages},
+      fn event ->
+        callback.(parse_stream_event(event))
+      end
+    )
 
     :ok
   end

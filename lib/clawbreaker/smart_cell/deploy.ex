@@ -69,19 +69,19 @@ if Code.ensure_loaded?(Kino.SmartCell) do
       """
       export function init(ctx, payload) {
         ctx.importCSS("main.css");
-        
+
         ctx.root.innerHTML = `
           <div class="deploy-config">
             <div class="header">
               <span class="icon">🚀</span>
               <span class="title">Deploy Agent</span>
             </div>
-            
+
             <div class="field">
               <label>Agent Variable</label>
               <input type="text" name="agent_var" value="${payload.agent_var}" />
             </div>
-            
+
             <div class="field">
               <label>Environment</label>
               <div class="radio-group">
@@ -97,7 +97,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
                 </label>
               </div>
             </div>
-            
+
             ${payload.environment === 'production' ? `
               <div class="warning">
                 ⚠️ This will deploy to <strong>production</strong>
@@ -105,11 +105,11 @@ if Code.ensure_loaded?(Kino.SmartCell) do
             ` : ''}
           </div>
         `;
-        
+
         ctx.root.querySelector('[name="agent_var"]').addEventListener('change', (e) => {
           ctx.pushEvent("update", { agent_var: e.target.value });
         });
-        
+
         ctx.root.querySelectorAll('[name="environment"]').forEach(radio => {
           radio.addEventListener('change', (e) => {
             ctx.pushEvent("update", { environment: e.target.value });
@@ -127,7 +127,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         background: #f8f9fa;
         border-radius: 8px;
       }
-      
+
       .header {
         display: flex;
         align-items: center;
@@ -135,14 +135,14 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         margin-bottom: 16px;
         font-weight: 600;
       }
-      
+
       .icon { font-size: 20px; }
       .title { font-size: 14px; }
-      
+
       .field {
         margin-bottom: 16px;
       }
-      
+
       .field label {
         display: block;
         font-size: 12px;
@@ -150,7 +150,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         margin-bottom: 4px;
         color: #495057;
       }
-      
+
       .field input[type="text"] {
         width: 200px;
         padding: 8px 12px;
@@ -159,19 +159,19 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         font-size: 14px;
         font-family: monospace;
       }
-      
+
       .radio-group {
         display: flex;
         gap: 16px;
       }
-      
+
       .radio-group label {
         display: flex;
         align-items: center;
         gap: 4px;
         cursor: pointer;
       }
-      
+
       .warning {
         padding: 8px 12px;
         background: #fff3cd;

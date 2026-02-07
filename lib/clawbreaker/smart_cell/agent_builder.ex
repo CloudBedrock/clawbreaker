@@ -115,39 +115,39 @@ if Code.ensure_loaded?(Kino.SmartCell) do
       """
       export function init(ctx, payload) {
         ctx.importCSS("main.css");
-        
+
         ctx.root.innerHTML = `
           <div class="agent-builder">
             <div class="header">
               <span class="icon">🤖</span>
               <span class="title">Agent Builder</span>
             </div>
-            
+
             <div class="field">
               <label>Name</label>
-              <input type="text" name="name" value="${payload.name}" 
+              <input type="text" name="name" value="${payload.name}"
                      placeholder="My Agent" />
             </div>
-            
+
             <div class="field">
               <label>Model</label>
               <select name="model">
-                ${payload.available_models.map(m => 
+                ${payload.available_models.map(m =>
                   `<option value="${m.id}" ${m.id === payload.model ? 'selected' : ''}>${m.name}</option>`
                 ).join('')}
               </select>
             </div>
-            
+
             <div class="field">
               <label>System Prompt</label>
-              <textarea name="system_prompt" rows="4" 
+              <textarea name="system_prompt" rows="4"
                         placeholder="You are a helpful assistant...">${payload.system_prompt}</textarea>
             </div>
-            
+
             <div class="field">
               <label>Tools</label>
               <div class="tools-list">
-                ${payload.available_tools.length > 0 
+                ${payload.available_tools.length > 0
                   ? payload.available_tools.map(t => `
                       <label class="tool-item">
                         <input type="checkbox" name="tools" value="${t.id}"
@@ -159,21 +159,21 @@ if Code.ensure_loaded?(Kino.SmartCell) do
                 }
               </div>
             </div>
-            
+
             <div class="field">
               <label>Temperature: <span class="temp-value">${payload.temperature}</span></label>
-              <input type="range" name="temperature" min="0" max="1" step="0.1" 
+              <input type="range" name="temperature" min="0" max="1" step="0.1"
                      value="${payload.temperature}" />
             </div>
           </div>
         `;
-        
+
         // Event listeners
         ctx.root.querySelectorAll('input, select, textarea').forEach(el => {
           el.addEventListener('change', () => {
             const tools = [...ctx.root.querySelectorAll('input[name="tools"]:checked')]
               .map(cb => cb.value);
-            
+
             ctx.pushEvent("update", {
               name: ctx.root.querySelector('[name="name"]').value,
               model: ctx.root.querySelector('[name="model"]').value,
@@ -183,7 +183,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
             });
           });
         });
-        
+
         // Update temperature display
         ctx.root.querySelector('[name="temperature"]').addEventListener('input', (e) => {
           ctx.root.querySelector('.temp-value').textContent = e.target.value;
@@ -200,7 +200,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         background: #f8f9fa;
         border-radius: 8px;
       }
-      
+
       .header {
         display: flex;
         align-items: center;
@@ -208,14 +208,14 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         margin-bottom: 16px;
         font-weight: 600;
       }
-      
+
       .icon { font-size: 20px; }
       .title { font-size: 14px; }
-      
+
       .field {
         margin-bottom: 16px;
       }
-      
+
       .field label {
         display: block;
         font-size: 12px;
@@ -223,7 +223,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         margin-bottom: 4px;
         color: #495057;
       }
-      
+
       .field input[type="text"],
       .field select,
       .field textarea {
@@ -234,18 +234,18 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         font-size: 14px;
         font-family: inherit;
       }
-      
+
       .field textarea {
         resize: vertical;
         min-height: 80px;
       }
-      
+
       .tools-list {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
       }
-      
+
       .tool-item {
         display: flex;
         align-items: center;
@@ -257,17 +257,17 @@ if Code.ensure_loaded?(Kino.SmartCell) do
         font-size: 12px;
         cursor: pointer;
       }
-      
+
       .no-tools {
         font-size: 12px;
         color: #6c757d;
         font-style: italic;
       }
-      
+
       input[type="range"] {
         width: 100%;
       }
-      
+
       .temp-value {
         font-weight: normal;
         color: #6c757d;

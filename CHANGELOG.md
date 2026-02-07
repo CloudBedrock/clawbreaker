@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.2] - 2026-02-07
+
+### Fixed
+
+- Updated copyright to 2026 Cloud Bedrock, LLC
+
 ## [0.1.1] - 2026-02-07
 
 ### Fixed

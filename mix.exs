@@ -43,7 +43,9 @@ defmodule Clawbreaker.MixProject do
 
       # Dev/test
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
-      {:mox, "~> 1.1", only: :test}
+      {:mox, "~> 1.1", only: :test},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 

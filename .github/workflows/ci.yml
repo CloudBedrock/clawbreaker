@@ -17,10 +17,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - elixir: "1.16"
-            otp: "26"
-          - elixir: "1.17"
+          - elixir: "1.18"
             otp: "27"
+          - elixir: "1.19"
+            otp: "28"
 
     steps:
       - uses: actions/checkout@v4
@@ -63,8 +63,8 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: "1.17"
-          otp-version: "27"
+          elixir-version: "1.19"
+          otp-version: "28"
 
       - name: Install dependencies
         run: mix deps.get
@@ -73,7 +73,7 @@ jobs:
         run: mix docs
 
   credo:
-    name: Static Analysis
+    name: Credo
     runs-on: ubuntu-latest
 
     steps:
@@ -82,8 +82,8 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: "1.17"
-          otp-version: "27"
+          elixir-version: "1.19"
+          otp-version: "28"
 
       - name: Install dependencies
         run: mix deps.get

@@ -1,0 +1,23 @@
+# Dependencies
+/deps/
+/_build/
+
+# Generated files
+*.beam
+*.ez
+/doc/
+
+# Secrets
+*.secret.exs
+.env
+
+# IDE
+.elixir_ls/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

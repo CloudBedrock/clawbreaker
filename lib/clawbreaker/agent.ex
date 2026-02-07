@@ -20,7 +20,7 @@ defmodule Clawbreaker.Agent do
       Clawbreaker.Agent.stream_test(agent, "Tell me a story", fn event ->
         case event do
           {:chunk, text} -> IO.write(text)
-          {:tool_call, tool} -> IO.puts("Calling \#{tool.name}...")
+          {:tool_call, tool} -> IO.puts("Calling \#{tool["name"]}...")
           :done -> IO.puts("Done!")
         end
       end)
@@ -45,16 +45,36 @@ defmodule Clawbreaker.Agent do
           metadata: map()
         }
 
+  @type create_opts :: [
+          name: String.t(),
+          model: String.t(),
+          system_prompt: String.t(),
+          tools: [atom() | String.t()],
+          temperature: float()
+        ]
+
+  @type deploy_opts :: [env: :staging | :production, note: String.t()]
+
+  @type stream_event ::
+          {:chunk, String.t()}
+          | {:tool_call, map()}
+          | {:tool_result, map()}
+          | :done
+          | {:unknown, term()}
+
+  @type message :: %{role: String.t(), content: String.t()} | %{atom() => term()}
+  @type messages :: [message()]
+
   @doc """
-  Create a new agent.
+  Create a new agent on the server.
 
   ## Options
 
     * `:name` - Agent name (required)
-    * `:model` - Model ID like "claude-sonnet-4" (required)
+    * `:model` - Model ID like `"claude-sonnet-4"` (required)
     * `:system_prompt` - System prompt (required)
-    * `:tools` - List of tool IDs (optional)
-    * `:temperature` - Temperature 0.0-1.0 (default: 0.7)
+    * `:tools` - List of tool IDs (optional, default: `[]`)
+    * `:temperature` - Temperature 0.0-1.0 (optional, default: `0.7`)
 
   ## Examples
 
@@ -65,6 +85,7 @@ defmodule Clawbreaker.Agent do
       )
 
   """
+  @spec create!(create_opts()) :: t()
   def create!(opts) do
     case create(opts) do
       {:ok, agent} -> agent
@@ -72,6 +93,7 @@ defmodule Clawbreaker.Agent do
     end
   end
 
+  @spec create(create_opts()) :: {:ok, t()} | {:error, term()}
   def create(opts) do
     body = %{
       name: Keyword.fetch!(opts, :name),
@@ -91,7 +113,17 @@ defmodule Clawbreaker.Agent do
   Build an agent struct locally without creating it on the server.
 
   Useful for testing configurations before committing.
+
+  ## Examples
+
+      agent = Clawbreaker.Agent.new(
+        name: "Test Bot",
+        model: "claude-sonnet-4",
+        system_prompt: "You are helpful."
+      )
+
   """
+  @spec new(create_opts()) :: t()
   def new(opts) do
     %__MODULE__{
       name: Keyword.fetch!(opts, :name),
@@ -105,16 +137,18 @@ defmodule Clawbreaker.Agent do
 
   @doc """
   List all agents.
+
+  ## Options
+
+    * `:limit` - Maximum number of agents to return
+    * `:offset` - Number of agents to skip
+
+  ## Examples
+
+      Clawbreaker.Agent.list!(limit: 10)
+
   """
-  def list(opts \\ []) do
-    params = Keyword.take(opts, [:limit, :offset])
-
-    case Client.get("/v1/agents", params: params) do
-      {:ok, %{"data" => agents}} -> {:ok, Enum.map(agents, &from_api/1)}
-      {:error, _} = error -> error
-    end
-  end
-
+  @spec list!(keyword()) :: [t()]
   def list!(opts \\ []) do
     case list(opts) do
       {:ok, agents} -> agents
@@ -122,16 +156,26 @@ defmodule Clawbreaker.Agent do
     end
   end
 
-  @doc """
-  Get an agent by ID.
-  """
-  def get(id) do
-    case Client.get("/v1/agents/#{id}") do
-      {:ok, data} -> {:ok, from_api(data)}
+  @spec list(keyword()) :: {:ok, [t()]} | {:error, term()}
+  def list(opts \\ []) do
+    params = Keyword.take(opts, [:limit, :offset])
+
+    case Client.get("/v1/agents", params: params) do
+      {:ok, %{"data" => agents}} -> {:ok, Enum.map(agents, &from_api/1)}
+      {:ok, agents} when is_list(agents) -> {:ok, Enum.map(agents, &from_api/1)}
       {:error, _} = error -> error
     end
   end
 
+  @doc """
+  Get an agent by ID.
+
+  ## Examples
+
+      agent = Clawbreaker.Agent.get!("ag_123")
+
+  """
+  @spec get!(String.t()) :: t()
   def get!(id) do
     case get(id) do
       {:ok, agent} -> agent
@@ -139,10 +183,32 @@ defmodule Clawbreaker.Agent do
     end
   end
 
+  @spec get(String.t()) :: {:ok, t()} | {:error, term()}
+  def get(id) do
+    case Client.get("/v1/agents/#{id}") do
+      {:ok, data} -> {:ok, from_api(data)}
+      {:error, _} = error -> error
+    end
+  end
+
   @doc """
   Update an agent.
+
+  ## Examples
+
+      Clawbreaker.Agent.update!(agent, temperature: 0.5, name: "New Name")
+
   """
-  def update(%__MODULE__{id: id} = _agent, updates) when is_binary(id) do
+  @spec update!(t(), keyword()) :: t()
+  def update!(%__MODULE__{} = agent, updates) do
+    case update(agent, updates) do
+      {:ok, agent} -> agent
+      {:error, reason} -> raise Clawbreaker.APIError, reason
+    end
+  end
+
+  @spec update(t(), keyword()) :: {:ok, t()} | {:error, term()}
+  def update(%__MODULE__{id: id}, updates) when is_binary(id) do
     body = Map.new(updates)
 
     case Client.put("/v1/agents/#{id}", body) do
@@ -151,25 +217,33 @@ defmodule Clawbreaker.Agent do
     end
   end
 
-  def update!(%__MODULE__{} = agent, updates) do
-    case update(agent, updates) do
-      {:ok, agent} -> agent
-      {:error, reason} -> raise Clawbreaker.APIError, reason
-    end
+  def update(%__MODULE__{id: nil}, _updates) do
+    {:error, "Cannot update an agent that hasn't been created. Use create/1 first."}
   end
 
   @doc """
   Delete an agent.
-  """
-  def delete(%__MODULE__{id: id}) when is_binary(id) do
-    Client.delete("/v1/agents/#{id}")
-  end
 
-  def delete!(agent) do
+  ## Examples
+
+      Clawbreaker.Agent.delete!(agent)
+
+  """
+  @spec delete!(t()) :: :ok
+  def delete!(%__MODULE__{} = agent) do
     case delete(agent) do
       {:ok, _} -> :ok
       {:error, reason} -> raise Clawbreaker.APIError, reason
     end
+  end
+
+  @spec delete(t()) :: {:ok, map()} | {:error, term()}
+  def delete(%__MODULE__{id: id}) when is_binary(id) do
+    Client.delete("/v1/agents/#{id}")
+  end
+
+  def delete(%__MODULE__{id: nil}) do
+    {:error, "Cannot delete an agent that hasn't been created."}
   end
 
   @doc """
@@ -178,7 +252,7 @@ defmodule Clawbreaker.Agent do
   ## Examples
 
       # Single message
-      Clawbreaker.Agent.test!(agent, "Hello!")
+      response = Clawbreaker.Agent.test!(agent, "Hello!")
 
       # Conversation history
       messages = [
@@ -186,9 +260,10 @@ defmodule Clawbreaker.Agent do
         %{role: "assistant", content: "Hello!"},
         %{role: "user", content: "How are you?"}
       ]
-      Clawbreaker.Agent.test!(agent, messages)
+      response = Clawbreaker.Agent.test!(agent, messages)
 
   """
+  @spec test!(t(), String.t() | messages()) :: map()
   def test!(agent, message_or_messages) do
     case test(agent, message_or_messages) do
       {:ok, response} -> response
@@ -196,16 +271,16 @@ defmodule Clawbreaker.Agent do
     end
   end
 
+  @spec test(t(), String.t() | messages()) :: {:ok, map()} | {:error, term()}
   def test(agent, message) when is_binary(message) do
     test(agent, [%{role: "user", content: message}])
   end
 
-  def test(%__MODULE__{id: id} = _agent, messages) when is_list(messages) and is_binary(id) do
+  def test(%__MODULE__{id: id}, messages) when is_list(messages) and is_binary(id) do
     Client.post("/v1/agents/#{id}/test", %{messages: messages})
   end
 
-  def test(%__MODULE__{} = agent, messages) when is_list(messages) do
-    # Local agent (not yet created) - create temporarily for test
+  def test(%__MODULE__{id: nil} = agent, messages) when is_list(messages) do
     body = %{
       agent: to_api(agent),
       messages: messages
@@ -218,37 +293,40 @@ defmodule Clawbreaker.Agent do
   Test an agent with streaming response.
 
   The callback receives events:
-    * `{:chunk, text}` - Text chunk
+    * `{:chunk, text}` - Text chunk from the model
     * `{:tool_call, tool}` - Tool being called
-    * `{:tool_result, result}` - Tool result
+    * `{:tool_result, result}` - Tool execution result
     * `:done` - Stream complete
 
   ## Examples
 
       Clawbreaker.Agent.stream_test(agent, "Tell me a story", fn
         {:chunk, text} -> IO.write(text)
-        {:tool_call, tool} -> IO.puts("\\n🔧 \#{tool["name"]}")
+        {:tool_call, tool} -> IO.puts("\\n🔧 Calling \#{tool["name"]}...")
         :done -> IO.puts("\\n✅ Done")
         _ -> :ok
       end)
 
   """
-  def stream_test(%__MODULE__{id: id} = _agent, message, callback) when is_binary(id) do
-    messages = if is_binary(message), do: [%{role: "user", content: message}], else: message
+  @spec stream_test(t(), String.t() | messages(), (stream_event() -> any())) :: :ok
+  def stream_test(%__MODULE__{id: id}, message, callback) when is_binary(id) do
+    messages = normalize_messages(message)
 
     Client.stream("/v1/agents/#{id}/test/stream", %{messages: messages}, fn event ->
-      parsed = parse_stream_event(event)
-      callback.(parsed)
+      callback.(parse_stream_event(event))
     end)
+
+    :ok
   end
 
-  def stream_test(%__MODULE__{} = agent, message, callback) do
-    messages = if is_binary(message), do: [%{role: "user", content: message}], else: message
+  def stream_test(%__MODULE__{id: nil} = agent, message, callback) do
+    messages = normalize_messages(message)
 
     Client.stream("/v1/agents/test/stream", %{agent: to_api(agent), messages: messages}, fn event ->
-      parsed = parse_stream_event(event)
-      callback.(parsed)
+      callback.(parse_stream_event(event))
     end)
+
+    :ok
   end
 
   @doc """
@@ -257,14 +335,16 @@ defmodule Clawbreaker.Agent do
   ## Options
 
     * `:env` - `:staging` or `:production` (default: `:staging`)
-    * `:note` - Deployment note
+    * `:note` - Deployment note (optional)
 
   ## Examples
 
       {:ok, deployment} = Clawbreaker.Agent.deploy(agent, env: :production)
+      IO.puts("Deployed to: \#{deployment["endpoint"]}")
 
   """
-  def deploy(%__MODULE__{id: id} = _agent, opts \\ []) when is_binary(id) do
+  @spec deploy(t(), deploy_opts()) :: {:ok, map()} | {:error, term()}
+  def deploy(%__MODULE__{id: id}, opts \\ []) when is_binary(id) do
     body = %{
       environment: Keyword.get(opts, :env, :staging),
       note: Keyword.get(opts, :note)
@@ -273,6 +353,7 @@ defmodule Clawbreaker.Agent do
     Client.post("/v1/agents/#{id}/deploy", body)
   end
 
+  @spec deploy!(t(), deploy_opts()) :: map()
   def deploy!(%__MODULE__{} = agent, opts \\ []) do
     case deploy(agent, opts) do
       {:ok, deployment} -> deployment
@@ -282,7 +363,7 @@ defmodule Clawbreaker.Agent do
 
   # Private helpers
 
-  defp from_api(data) do
+  defp from_api(data) when is_map(data) do
     %__MODULE__{
       id: data["id"],
       name: data["name"],
@@ -303,6 +384,12 @@ defmodule Clawbreaker.Agent do
       temperature: agent.temperature
     }
   end
+
+  defp normalize_messages(message) when is_binary(message) do
+    [%{role: "user", content: message}]
+  end
+
+  defp normalize_messages(messages) when is_list(messages), do: messages
 
   defp parse_stream_event(%{"type" => "chunk", "text" => text}), do: {:chunk, text}
   defp parse_stream_event(%{"type" => "tool_call"} = e), do: {:tool_call, e}

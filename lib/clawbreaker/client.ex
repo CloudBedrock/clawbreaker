@@ -3,6 +3,10 @@ defmodule Clawbreaker.Client do
 
   alias Clawbreaker.Config
 
+  @type response :: {:ok, map() | list()} | {:error, term()}
+
+  @doc false
+  @spec get!(String.t(), keyword()) :: map() | list()
   def get!(path, opts \\ []) do
     case get(path, opts) do
       {:ok, body} -> body
@@ -10,10 +14,14 @@ defmodule Clawbreaker.Client do
     end
   end
 
+  @doc false
+  @spec get(String.t(), keyword()) :: response()
   def get(path, opts \\ []) do
     request(:get, path, nil, opts)
   end
 
+  @doc false
+  @spec post!(String.t(), map(), keyword()) :: map() | list()
   def post!(path, body, opts \\ []) do
     case post(path, body, opts) do
       {:ok, body} -> body
@@ -21,10 +29,14 @@ defmodule Clawbreaker.Client do
     end
   end
 
+  @doc false
+  @spec post(String.t(), map(), keyword()) :: response()
   def post(path, body, opts \\ []) do
     request(:post, path, body, opts)
   end
 
+  @doc false
+  @spec put!(String.t(), map(), keyword()) :: map() | list()
   def put!(path, body, opts \\ []) do
     case put(path, body, opts) do
       {:ok, body} -> body
@@ -32,10 +44,14 @@ defmodule Clawbreaker.Client do
     end
   end
 
+  @doc false
+  @spec put(String.t(), map(), keyword()) :: response()
   def put(path, body, opts \\ []) do
     request(:put, path, body, opts)
   end
 
+  @doc false
+  @spec delete!(String.t(), keyword()) :: map() | list()
   def delete!(path, opts \\ []) do
     case delete(path, opts) do
       {:ok, body} -> body
@@ -43,10 +59,14 @@ defmodule Clawbreaker.Client do
     end
   end
 
+  @doc false
+  @spec delete(String.t(), keyword()) :: response()
   def delete(path, opts \\ []) do
     request(:delete, path, nil, opts)
   end
 
+  @doc false
+  @spec stream(String.t(), map(), (map() -> any()), keyword()) :: {:ok, term()} | {:error, term()}
   def stream(path, body, callback, opts \\ []) do
     url = build_url(path)
     headers = build_headers(opts)
@@ -54,13 +74,16 @@ defmodule Clawbreaker.Client do
     Req.post(url,
       json: body,
       headers: headers,
+      receive_timeout: 120_000,
       into: fn {:data, data}, acc ->
-        for line <- String.split(data, "\n", trim: true) do
+        data
+        |> String.split("\n", trim: true)
+        |> Enum.each(fn line ->
           case Jason.decode(line) do
             {:ok, event} -> callback.(event)
-            _ -> :ok
+            {:error, _} -> :ok
           end
-        end
+        end)
 
         {:cont, acc}
       end
@@ -105,7 +128,7 @@ defmodule Clawbreaker.Client do
     headers = [
       {"content-type", "application/json"},
       {"accept", "application/json"},
-      {"user-agent", "clawbreaker-elixir/#{Clawbreaker.MixProject.project()[:version]}"}
+      {"user-agent", "clawbreaker-elixir/#{Mix.Project.config()[:version]}"}
     ]
 
     if api_key do

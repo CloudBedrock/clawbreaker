@@ -1,14 +1,14 @@
 defmodule Clawbreaker do
   @moduledoc """
-  Official Elixir client for Clawbreaker AI agent platform.
+  Official Elixir client for the Clawbreaker AI agent platform.
 
   ## Quick Start
 
-      # In Livebook
-      Mix.install([{:clawbreaker, "~> 0.1"}])
-
-      # Connect (opens OAuth in browser)
+      # Connect with OAuth (opens browser)
       Clawbreaker.connect!()
+
+      # Or use API key
+      Clawbreaker.connect!(api_key: System.fetch_env!("CLAWBREAKER_API_KEY"))
 
       # Create and test an agent
       agent = Clawbreaker.Agent.create!(
@@ -21,7 +21,7 @@ defmodule Clawbreaker do
 
   ## Configuration
 
-  Configure via application environment or at runtime:
+  Configure via application environment:
 
       # config/runtime.exs
       config :clawbreaker,
@@ -30,43 +30,55 @@ defmodule Clawbreaker do
 
   Or connect at runtime:
 
-      Clawbreaker.connect!(api_key: "sk_...")
+      Clawbreaker.connect!(url: "https://api.clawbreaker.dev", api_key: "sk_...")
 
-  ## Smart Cells
+  ## Livebook Smart Cells
 
-  When used in Livebook, smart cells are automatically registered:
+  When used in Livebook, visual smart cells are automatically registered:
 
   - 🔌 **Connect to Clawbreaker** - OAuth/API key setup
   - 🤖 **Agent Builder** - Visual agent configuration
-  - 💬 **Agent Chat** - Interactive testing
-  - 🔧 **Tool Builder** - Create custom tools
-  - 🚀 **Deploy Agent** - Push to staging/production
-  - 📊 **Metrics** - Usage and cost visualization
-
+  - 💬 **Agent Chat** - Interactive testing with streaming
+  - 🚀 **Deploy Agent** - One-click deployment
   """
 
-  alias Clawbreaker.{Config, Client}
+  alias Clawbreaker.Config
+
+  @type connect_opts :: [
+          url: String.t(),
+          api_key: String.t(),
+          org: String.t(),
+          persist: boolean()
+        ]
+
+  @type config :: %{url: String.t(), api_key: String.t() | nil, org: String.t() | nil}
 
   @doc """
   Connect to Clawbreaker with interactive OAuth flow.
 
   Opens a browser window for authentication. Credentials are stored
-  locally for future sessions.
+  locally in `~/.clawbreaker/credentials.json` for future sessions.
 
   ## Options
 
     * `:url` - Clawbreaker instance URL (default: `https://api.clawbreaker.dev`)
+    * `:api_key` - API key for authentication (skips OAuth if provided)
     * `:org` - Organization to connect to (if you belong to multiple)
+    * `:persist` - Whether to save credentials (default: `true`)
 
   ## Examples
 
-      # Connect to Clawbreaker Cloud
+      # Connect to Clawbreaker Cloud with OAuth
       Clawbreaker.connect!()
+
+      # Connect with API key
+      Clawbreaker.connect!(api_key: "sk_live_...")
 
       # Connect to self-hosted instance
       Clawbreaker.connect!(url: "https://clawbreaker.mycompany.com")
 
   """
+  @spec connect!(connect_opts()) :: config()
   def connect!(opts \\ []) do
     case connect(opts) do
       {:ok, config} -> config
@@ -77,14 +89,15 @@ defmodule Clawbreaker do
   @doc """
   Connect to Clawbreaker. Returns `{:ok, config}` or `{:error, reason}`.
 
-  See `connect!/1` for options.
+  See `connect!/1` for options and examples.
   """
+  @spec connect(connect_opts()) :: {:ok, config()} | {:error, term()}
   def connect(opts \\ []) do
     url = opts[:url] || Config.default_url()
 
     cond do
       opts[:api_key] ->
-        Config.configure(url: url, api_key: opts[:api_key])
+        Config.configure(url: url, api_key: opts[:api_key], persist: opts[:persist] != false)
 
       Config.has_stored_credentials?() ->
         Config.load_stored_credentials()
@@ -97,15 +110,19 @@ defmodule Clawbreaker do
   @doc """
   Connect using environment variables.
 
-  Expects:
-    * `CLAWBREAKER_URL` (optional, defaults to cloud)
-    * `CLAWBREAKER_API_KEY` (required)
+  Reads from:
+    * `CLAWBREAKER_URL` - Instance URL (optional, defaults to cloud)
+    * `CLAWBREAKER_API_KEY` - API key (required)
 
   ## Examples
+
+      # Set env vars first:
+      # export CLAWBREAKER_API_KEY=sk_live_...
 
       Clawbreaker.connect_from_env!()
 
   """
+  @spec connect_from_env!() :: config()
   def connect_from_env! do
     url = System.get_env("CLAWBREAKER_URL", Config.default_url())
 
@@ -123,10 +140,11 @@ defmodule Clawbreaker do
 
   ## Examples
 
-      Clawbreaker.connected?()
-      #=> true
+      iex> Clawbreaker.connected?()
+      true
 
   """
+  @spec connected?() :: boolean()
   def connected? do
     Config.configured?()
   end
@@ -137,11 +155,12 @@ defmodule Clawbreaker do
   ## Examples
 
       Clawbreaker.whoami()
-      #=> %{user: "jim@example.com", org: "acme-corp", url: "https://api.clawbreaker.dev"}
+      #=> %{"user" => "jim@example.com", "org" => "acme-corp"}
 
   """
+  @spec whoami() :: map()
   def whoami do
-    Client.get!("/v1/whoami")
+    Clawbreaker.Client.get!("/v1/whoami")
   end
 
   @doc """
@@ -150,16 +169,28 @@ defmodule Clawbreaker do
   ## Examples
 
       Clawbreaker.orgs()
-      #=> [%{id: "acme-corp", name: "Acme Corporation", role: :admin}]
+      #=> [%{"id" => "acme-corp", "name" => "Acme Corporation", "role" => "admin"}]
 
   """
+  @spec orgs() :: [map()]
   def orgs do
-    Client.get!("/v1/orgs")
+    case Clawbreaker.Client.get("/v1/orgs") do
+      {:ok, %{"data" => orgs}} -> orgs
+      {:ok, orgs} when is_list(orgs) -> orgs
+      {:error, reason} -> raise Clawbreaker.APIError, reason
+    end
   end
 
   @doc """
   Disconnect and clear stored credentials.
+
+  ## Examples
+
+      Clawbreaker.disconnect()
+      :ok
+
   """
+  @spec disconnect() :: :ok
   def disconnect do
     Config.clear()
   end

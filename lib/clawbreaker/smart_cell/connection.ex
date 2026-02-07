@@ -7,7 +7,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
 
     @impl true
     def init(attrs, ctx) do
-      url = attrs["url"] || "https://api.clawbreaker.dev"
+      url = attrs["url"] || "https://api.clawbreaker.ai"
 
       {:ok,
        assign(ctx,
@@ -81,7 +81,7 @@ if Code.ensure_loaded?(Kino.SmartCell) do
             <div class="field">
               <label>Instance URL</label>
               <input type="url" name="url" value="${payload.url}"
-                     placeholder="https://api.clawbreaker.dev" />
+                     placeholder="https://api.clawbreaker.ai" />
             </div>
 
             <div class="field checkbox">

@@ -4,7 +4,7 @@
 [![Hex.pm](https://img.shields.io/hexpm/v/clawbreaker.svg)](https://hex.pm/packages/clawbreaker)
 [![Docs](https://img.shields.io/badge/docs-hexdocs-blue.svg)](https://hexdocs.pm/clawbreaker)
 
-Official Elixir client for [Clawbreaker](https://clawbreaker.dev) — the enterprise AI agent platform.
+Official Elixir client for [Clawbreaker](https://clawbreaker.ai) — the enterprise AI agent platform.
 
 ## Installation
 
@@ -134,7 +134,7 @@ When used in [Livebook](https://livebook.dev), visual smart cells are automatica
 ```elixir
 # config/runtime.exs
 config :clawbreaker,
-  url: System.get_env("CLAWBREAKER_URL", "https://api.clawbreaker.dev"),
+  url: System.get_env("CLAWBREAKER_URL", "https://api.clawbreaker.ai"),
   api_key: System.get_env("CLAWBREAKER_API_KEY")
 ```
 

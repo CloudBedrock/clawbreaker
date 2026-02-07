@@ -1,7 +1,7 @@
 defmodule Clawbreaker.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.1.1"
   @source_url "https://github.com/CloudBedrock/clawbreaker"
 
   def project do
@@ -18,7 +18,7 @@ defmodule Clawbreaker.MixProject do
       description: "Official Elixir client for Clawbreaker AI agent platform",
       name: "Clawbreaker",
       source_url: @source_url,
-      homepage_url: "https://clawbreaker.dev",
+      homepage_url: "https://clawbreaker.ai",
 
       # Dialyzer
       dialyzer: [
@@ -64,7 +64,7 @@ defmodule Clawbreaker.MixProject do
       files: ~w(lib .formatter.exs mix.exs README.md LICENSE CHANGELOG.md),
       licenses: ["Apache-2.0"],
       links: %{
-        "Website" => "https://clawbreaker.dev",
+        "Website" => "https://clawbreaker.ai",
         "Documentation" => "https://hexdocs.pm/clawbreaker",
         "GitHub" => @source_url
       }
@@ -77,7 +77,7 @@ defmodule Clawbreaker.MixProject do
       name: "Clawbreaker",
       source_ref: "v#{@version}",
       source_url: @source_url,
-      homepage_url: "https://clawbreaker.dev",
+      homepage_url: "https://clawbreaker.ai",
       extras: ["README.md", "CHANGELOG.md"],
       groups_for_modules: [
         Core: [

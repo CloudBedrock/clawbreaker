@@ -25,12 +25,12 @@ defmodule Clawbreaker do
 
       # config/runtime.exs
       config :clawbreaker,
-        url: System.get_env("CLAWBREAKER_URL", "https://api.clawbreaker.dev"),
+        url: System.get_env("CLAWBREAKER_URL", "https://api.clawbreaker.ai"),
         api_key: System.get_env("CLAWBREAKER_API_KEY")
 
   Or connect at runtime:
 
-      Clawbreaker.connect!(url: "https://api.clawbreaker.dev", api_key: "sk_...")
+      Clawbreaker.connect!(url: "https://api.clawbreaker.ai", api_key: "sk_...")
 
   ## Livebook Smart Cells
 
@@ -61,7 +61,7 @@ defmodule Clawbreaker do
 
   ## Options
 
-    * `:url` - Clawbreaker instance URL (default: `https://api.clawbreaker.dev`)
+    * `:url` - Clawbreaker instance URL (default: `https://api.clawbreaker.ai`)
     * `:api_key` - API key for authentication (skips OAuth if provided)
     * `:org` - Organization to connect to (if you belong to multiple)
     * `:persist` - Whether to save credentials (default: `true`)

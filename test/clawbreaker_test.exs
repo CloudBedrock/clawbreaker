@@ -16,7 +16,7 @@ defmodule ClawbreakerTest do
 
     test "uses default URL when not specified" do
       {:ok, config} = Clawbreaker.connect(api_key: "test_key", persist: false)
-      assert config.url == "https://api.clawbreaker.dev"
+      assert config.url == "https://api.clawbreaker.ai"
     end
 
     test "uses custom URL when specified" do
@@ -232,7 +232,7 @@ defmodule Clawbreaker.ConfigTest do
 
   describe "default_url/0" do
     test "returns the default API URL" do
-      assert Config.default_url() == "https://api.clawbreaker.dev"
+      assert Config.default_url() == "https://api.clawbreaker.ai"
     end
   end
 
@@ -247,7 +247,7 @@ defmodule Clawbreaker.ConfigTest do
 
     test "uses default URL when not specified" do
       {:ok, config} = Config.configure(api_key: "key123", persist: false)
-      assert config.url == "https://api.clawbreaker.dev"
+      assert config.url == "https://api.clawbreaker.ai"
     end
   end
 
@@ -281,7 +281,7 @@ defmodule Clawbreaker.ConfigTest do
       Config.configure(api_key: "mykey", persist: false)
 
       assert Config.get(:api_key) == "mykey"
-      assert Config.get(:url) == "https://api.clawbreaker.dev"
+      assert Config.get(:url) == "https://api.clawbreaker.ai"
     end
   end
 

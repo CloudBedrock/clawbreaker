@@ -304,7 +304,7 @@ defmodule Clawbreaker.AgentAPITest do
            "agent_id" => "ag_123",
            "environment" => "staging",
            "version" => 1,
-           "endpoint" => "https://api.clawbreaker.dev/agents/ag_123"
+           "endpoint" => "https://api.clawbreaker.ai/agents/ag_123"
          }}
       end)
 
@@ -333,7 +333,7 @@ defmodule Clawbreaker.AgentAPITest do
            "agent_id" => "ag_123",
            "environment" => "production",
            "version" => 1,
-           "endpoint" => "https://api.clawbreaker.dev/agents/ag_123"
+           "endpoint" => "https://api.clawbreaker.ai/agents/ag_123"
          }}
       end)
 

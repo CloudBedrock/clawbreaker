@@ -2,7 +2,7 @@ defmodule Clawbreaker.Config do
   @moduledoc false
   use Agent
 
-  @default_url "https://api.clawbreaker.dev"
+  @default_url "https://api.clawbreaker.ai"
   @credentials_path Path.expand("~/.clawbreaker/credentials.json")
 
   @doc false

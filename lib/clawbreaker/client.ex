@@ -1,9 +1,15 @@
 defmodule Clawbreaker.Client do
   @moduledoc false
+  @behaviour Clawbreaker.Client.Behaviour
 
   alias Clawbreaker.Config
 
   @type response :: {:ok, map() | list()} | {:error, term()}
+
+  # Allow swapping client in tests
+  defp impl do
+    Application.get_env(:clawbreaker, :client, __MODULE__)
+  end
 
   @doc false
   @spec get!(String.t(), keyword()) :: map() | list()
@@ -15,9 +21,14 @@ defmodule Clawbreaker.Client do
   end
 
   @doc false
+  @impl true
   @spec get(String.t(), keyword()) :: response()
   def get(path, opts \\ []) do
-    request(:get, path, nil, opts)
+    if impl() == __MODULE__ do
+      request(:get, path, nil, opts)
+    else
+      impl().get(path, opts)
+    end
   end
 
   @doc false
@@ -30,9 +41,14 @@ defmodule Clawbreaker.Client do
   end
 
   @doc false
+  @impl true
   @spec post(String.t(), map(), keyword()) :: response()
   def post(path, body, opts \\ []) do
-    request(:post, path, body, opts)
+    if impl() == __MODULE__ do
+      request(:post, path, body, opts)
+    else
+      impl().post(path, body, opts)
+    end
   end
 
   @doc false
@@ -45,9 +61,14 @@ defmodule Clawbreaker.Client do
   end
 
   @doc false
+  @impl true
   @spec put(String.t(), map(), keyword()) :: response()
   def put(path, body, opts \\ []) do
-    request(:put, path, body, opts)
+    if impl() == __MODULE__ do
+      request(:put, path, body, opts)
+    else
+      impl().put(path, body, opts)
+    end
   end
 
   @doc false
@@ -60,9 +81,14 @@ defmodule Clawbreaker.Client do
   end
 
   @doc false
+  @impl true
   @spec delete(String.t(), keyword()) :: response()
   def delete(path, opts \\ []) do
-    request(:delete, path, nil, opts)
+    if impl() == __MODULE__ do
+      request(:delete, path, nil, opts)
+    else
+      impl().delete(path, opts)
+    end
   end
 
   @doc false
@@ -100,8 +126,8 @@ defmodule Clawbreaker.Client do
       |> maybe_add_params(opts[:params])
 
     case Req.request(request_opts) do
-      {:ok, %{status: status, body: body}} when status in 200..299 ->
-        {:ok, body}
+      {:ok, %{status: status, body: resp_body}} when status in 200..299 ->
+        {:ok, resp_body}
 
       {:ok, %{status: 401}} ->
         {:error, :unauthorized}
@@ -109,8 +135,8 @@ defmodule Clawbreaker.Client do
       {:ok, %{status: 404}} ->
         {:error, :not_found}
 
-      {:ok, %{status: status, body: body}} ->
-        {:error, %{status: status, body: body}}
+      {:ok, %{status: status, body: resp_body}} ->
+        {:error, %{status: status, body: resp_body}}
 
       {:error, reason} ->
         {:error, reason}

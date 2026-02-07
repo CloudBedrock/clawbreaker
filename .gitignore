@@ -7,6 +7,10 @@
 *.ez
 /doc/
 
+# Dialyzer PLT files
+/priv/plts/*.plt
+/priv/plts/*.plt.hash
+
 # Secrets
 *.secret.exs
 .env
@@ -21,3 +25,12 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# Mix archives
+*.ez
+
+# Crash dumps
+erl_crash.dump
+
+# Test coverage
+/cover/
